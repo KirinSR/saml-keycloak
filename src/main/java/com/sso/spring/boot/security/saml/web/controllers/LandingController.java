@@ -16,6 +16,7 @@
 
 package com.sso.spring.boot.security.saml.web.controllers;
 
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -26,8 +27,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.sso.spring.boot.security.saml.web.stereotypes.CurrentUser;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class LandingController {
 	
 	// Logger
@@ -43,7 +45,8 @@ public class LandingController {
 			LOG.debug("Current authentication instance from security context: "
 					+ this.getClass().getSimpleName());
 		model.addAttribute("username", 	user.getUsername());
-		return "pages/landing";
+		model.addAttribute("sample","jwt");
+		return new Gson().toJson(user);
 	}
 
 }

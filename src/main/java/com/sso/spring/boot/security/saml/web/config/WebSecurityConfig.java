@@ -99,12 +99,14 @@ import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.sso.spring.boot.security.saml.web.core.SAMLUserDetailsServiceImpl;
- 
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements InitializingBean, DisposableBean {
- 
+
+    @Autowired
+   private Environment env;
 	private Timer backgroundTaskTimer;
 	private MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager;
 
@@ -268,10 +270,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public SAMLDiscovery samlIDPDiscovery() {
         SAMLDiscovery idpDiscovery = new SAMLDiscovery();
-        idpDiscovery.setIdpSelectionPath("/saml/discovery");
+        idpDiscovery.setIdpSelectionPath(env.getRequiredProperty("keycloak.idpselection.path"));
         return idpDiscovery;
     }
-    
+/*
 	@Bean
 	@Qualifier("idp-ssocircle")
 	public ExtendedMetadataDelegate ssoCircleExtendedMetadataProvider()
@@ -286,13 +288,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 		extendedMetadataDelegate.setMetadataRequireSignature(false);
 		backgroundTaskTimer.purge();
 		return extendedMetadataDelegate;
-	}
+	}*/
 
 	@Bean
     @Qualifier("idp-keycloak")
     public ExtendedMetadataDelegate keycloakExtendedMetadataProvider(Environment env)
             throws MetadataProviderException {
-        String idpKeycloakMetadataURL = env.getRequiredProperty("keycloak.auth-server-url") + "/protocol/saml/descriptor";
+        String idpKeycloakMetadataURL = env.getRequiredProperty("keycloak.auth-server-url") + env.getRequiredProperty("keycloak.metadata.descriptor");
         HTTPMetadataProvider httpMetadataProvider = new HTTPMetadataProvider(
                 this.backgroundTaskTimer, httpClient(), idpKeycloakMetadataURL);
         httpMetadataProvider.setParserPool(parserPool());
