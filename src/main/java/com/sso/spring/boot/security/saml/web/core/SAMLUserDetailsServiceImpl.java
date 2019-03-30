@@ -24,6 +24,8 @@ import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.schema.impl.XSAnyImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -37,7 +39,9 @@ public class SAMLUserDetailsServiceImpl implements SAMLUserDetailsService {
 	
 	// Logger
 	private static final Logger LOG = LoggerFactory.getLogger(SAMLUserDetailsServiceImpl.class);
-	
+
+	@Autowired
+	Environment environment;
 	public Object loadUserBySAML(SAMLCredential credential)
 			throws UsernameNotFoundException {
 		
@@ -50,7 +54,7 @@ public class SAMLUserDetailsServiceImpl implements SAMLUserDetailsService {
 		credential.getAttributes().forEach(st ->{
 			LOG.info("name :{}", st.getName());
 			LOG.info("name :{}", getAttributeValue(st.getAttributeValues().get(0)));
-            GrantedAuthority authoritySSO = new SimpleGrantedAuthority("ROLE_"+getAttributeValue(st.getAttributeValues().get(0)));
+            GrantedAuthority authoritySSO = new SimpleGrantedAuthority(environment.getProperty("spring.role.prefix")+getAttributeValue(st.getAttributeValues().get(0)));
             authorities.add(authoritySSO);
 		});
 		
@@ -60,7 +64,7 @@ public class SAMLUserDetailsServiceImpl implements SAMLUserDetailsService {
 		// In a real scenario, this implementation has to locate user in a arbitrary
 		// dataStore based on information present in the SAMLCredential and
 		// returns such a date in a form of application specific UserDetails object.
-		return new User(userID, "<abc123>", true, true, true, true, authorities);
+		return new User(userID, environment.getRequiredProperty("saml.user.default.psw"), true, true, true, true, authorities);
 	}
 
 	private String getAttributeValue(XMLObject attributeValue)

@@ -226,11 +226,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     public KeyManager keyManager() {
         DefaultResourceLoader loader = new DefaultResourceLoader();
         Resource storeFile = loader
-                .getResource("classpath:/saml/p3t.jks");
-        String storePass = "p3t";
+                .getResource(env.getRequiredProperty("keycloak.keyfile.path"));
+        String storePass = env.getRequiredProperty("keycloak.keyfile.storepassword");
         Map<String, String> passwords = new HashMap<String, String>();
-        passwords.put("p3t", "p3t");
-        String defaultKey = "p3t";
+        passwords.put(env.getRequiredProperty("keycloak.keyfile.key"), env.getRequiredProperty("keycloak.keyfile.key.password"));
+        String defaultKey = env.getRequiredProperty("keycloak.keyfile.key.default");
         return new JKSKeyManager(storeFile, storePass, passwords, defaultKey);
     }
  
@@ -319,7 +319,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public MetadataGenerator metadataGenerator() {
         MetadataGenerator metadataGenerator = new MetadataGenerator();
-        metadataGenerator.setEntityId("platform3t");
+        metadataGenerator.setEntityId(env.getRequiredProperty("keycloak.entity.id"));
         metadataGenerator.setExtendedMetadata(extendedMetadata());
         metadataGenerator.setIncludeDiscoveryExtension(false);
         metadataGenerator.setKeyManager(keyManager()); 
@@ -338,7 +338,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     public SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler() {
         SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler =
                 new SavedRequestAwareAuthenticationSuccessHandler();
-        successRedirectHandler.setDefaultTargetUrl("/landing");
+        successRedirectHandler.setDefaultTargetUrl(env.getRequiredProperty("saml.success.redirecturl"));
         return successRedirectHandler;
     }
     
@@ -348,7 +348,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	    	SimpleUrlAuthenticationFailureHandler failureHandler =
 	    			new SimpleUrlAuthenticationFailureHandler();
 	    	failureHandler.setUseForward(true);
-	    	failureHandler.setDefaultFailureUrl("/error");
+	    	failureHandler.setDefaultFailureUrl(env.getRequiredProperty("saml.error.redirecturl"));
 	    	return failureHandler;
     }
      
@@ -471,19 +471,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public FilterChainProxy samlFilter() throws Exception {
         List<SecurityFilterChain> chains = new ArrayList<SecurityFilterChain>();
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/login/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.entrypoint.url")),
                 samlEntryPoint()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/logout/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.logout.url")),
                 samlLogoutFilter()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/metadata/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.metadata.url")),
                 metadataDisplayFilter()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSO/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.sso.url")),
                 samlWebSSOProcessingFilter()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSOHoK/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.ssohok.url")),
                 samlWebSSOHoKProcessingFilter()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SingleLogout/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.singlelogout.url")),
                 samlLogoutProcessingFilter()));
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/discovery/**"),
+        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher(env.getRequiredProperty("saml.discovery.idp.url")),
                 samlIDPDiscovery()));
         return new FilterChainProxy(chains);
     }

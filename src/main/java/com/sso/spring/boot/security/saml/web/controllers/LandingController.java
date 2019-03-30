@@ -17,8 +17,10 @@
 package com.sso.spring.boot.security.saml.web.controllers;
 
 import com.google.gson.Gson;
+import com.sso.spring.boot.security.saml.web.user.repository.GlobalRolesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -35,7 +37,8 @@ public class LandingController {
 	// Logger
 	private static final Logger LOG = LoggerFactory
 			.getLogger(LandingController.class);
-
+@Autowired
+	GlobalRolesRepository globalRolesRepository;
 	@RequestMapping("/landing")
 	public String landing(@CurrentUser User user, Model model) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -44,6 +47,9 @@ public class LandingController {
 		else
 			LOG.debug("Current authentication instance from security context: "
 					+ this.getClass().getSimpleName());
+		globalRolesRepository.findAll().forEach(s->
+				LOG.info("roles :"+s)
+				);
 		model.addAttribute("username", 	user.getUsername());
 		model.addAttribute("sample","jwt");
 		return new Gson().toJson(user);
